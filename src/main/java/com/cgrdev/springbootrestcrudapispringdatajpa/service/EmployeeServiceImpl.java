@@ -1,58 +1,54 @@
 package com.cgrdev.springbootrestcrudapispringdatajpa.service;
 
-import com.cgrdev.springbootrestcrudapispringdatajpa.dao.EmployeeDAO;
+import com.cgrdev.springbootrestcrudapispringdatajpa.dao.EmployeeRepository;
 import com.cgrdev.springbootrestcrudapispringdatajpa.entity.Employee;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
 @Service
-@Transactional
 public class EmployeeServiceImpl implements EmployeeService {
 
-    EmployeeDAO employeeDAO;
+    EmployeeRepository employeeRepository;
 
     @Autowired
-    public EmployeeServiceImpl(@Qualifier("employeeDAOJpaImpl") EmployeeDAO employeeDAO) {
-        this.employeeDAO = employeeDAO;
+    public EmployeeServiceImpl(EmployeeRepository employeeRepository) {
+        this.employeeRepository = employeeRepository;
     }
 
     @Override
     public List<Employee> getAll() {
-        return employeeDAO.findAll();
+        return employeeRepository.findAll();
     }
 
     @Override
     public Employee getOne(int id) {
-        return employeeDAO.findById(id);
+        return employeeRepository.findById(id).orElseThrow(
+                () -> new RuntimeException("Employee with id not found - " + id)
+        );
     }
 
     @Override
     public Employee create(Employee employee) {
-
         // check correct id, must be 0
         if (employee.getId()!=0)
             throw new RuntimeException("You cannot assign an id on creation, must be 0 or not be.");
-
-        return employeeDAO.save(employee);
+        return employeeRepository.save(employee);
     }
 
     @Override
     public Employee update(Employee employee) {
 
         // check existing employee
-        Employee dbEmployee = employeeDAO.findById(employee.getId());
-        if (dbEmployee==null)
-            throw new RuntimeException("Employee with id not found - " + employee.getId());
+        Employee dbEmployee = employeeRepository.findById(employee.getId()).
+                orElseThrow(() -> new RuntimeException("Employee with id not found - " + employee.getId()));
 
         // update db employee with new data
         updateEmployee(dbEmployee, employee);
 
         // update database
-        employeeDAO.save(dbEmployee);
+        employeeRepository.save(dbEmployee);
 
         return dbEmployee;
     }
@@ -67,15 +63,13 @@ public class EmployeeServiceImpl implements EmployeeService {
     }
 
     @Override
-    public boolean delete(int id) {
+    public void delete(int id) {
 
         // check for existing employee
-        Employee employee = employeeDAO.findById(id);
-        if (employee==null) return false;
+        Employee employee = employeeRepository.findById(id).
+                orElseThrow(()-> new RuntimeException("Employee with id not found - " + id));
 
         // delete employee
-        employeeDAO.delete(employee);
-
-        return true;
+        employeeRepository.delete(employee);
     }
 }

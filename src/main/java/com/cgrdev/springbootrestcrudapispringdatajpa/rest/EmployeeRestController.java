@@ -46,11 +46,9 @@ public class EmployeeRestController {
     }
 
     // delete employee by id
-    // TODO Modify to not return same status code (200 OK) when deleted and when not found
     @DeleteMapping("/employees/{employeeId}")
     public String delete(@PathVariable int employeeId) {
-        if (!service.delete(employeeId))
-            throw new RuntimeException("Employee with id not found - " + employeeId);
+        service.delete(employeeId);
         return "Employee with id deleted - " + employeeId;
     }
 }
